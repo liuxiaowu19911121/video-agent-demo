@@ -1,34 +1,45 @@
 # agents/planner.py
-from models import DirectorScript, RenderTree, CuppingComponent, CuppingComponentParams, TextComponent, TextComponentParams
 import asyncio
+from models import DirectorScript, RenderTree, CuppingComponent, CuppingComponentParams, TextComponent, TextComponentParams
 from agents.coder import background_coder_reviewer_loop
 
-# 模拟 RAG 组件库
-AVAILABLE_COMPONENTS = ["cupping"]
-
 def plan_render_tree(script: DirectorScript) -> RenderTree:
-    print("[Planner] 正在进行 RAG 路由匹配...")
+    print("[Planner] 正在进行 RAG 路由与节奏翻译...")
     scenes = []
     
     for scene in script.scenes:
-        # 简单的规则匹配：如果意图包含“火罐”或“气压”，则命中 cupping 组件
-        if "气压" in scene.visual_intent or "皮肤" in scene.visual_intent:
-            print(f"  -> Scene {scene.id} 命中 [cupping] 组件")
+        if "拔火罐" in scene.visual_intent or "气压" in scene.visual_intent:
+            
+            # 🧠 核心逻辑：根据节奏和情感，翻译成具体的变体（Variant）
+            variant = "normal"
+            anim_duration = scene.duration
+            
+            if scene.pacing == "slow" and scene.emotion == "mysterious":
+                variant = "slow_burn"
+                anim_duration += 1.0  # 悬疑感，拉长动画时间
+            elif scene.pacing == "fast" and scene.emotion == "intense":
+                variant = "fast_snap"
+                anim_duration -= 0.5  # 震撼感，压缩时间
+                
+            print(f"  -> Scene {scene.id} 命中 [cupping] 组件，采用变体: {variant}")
+            
             comp = CuppingComponent(
-                duration=scene.duration,
-                params=CuppingComponentParams(text=scene.text, pressure=-29, show_flame=True)
+                duration=scene.duration, # 场景总时长保持不变
+                params=CuppingComponentParams(
+                    text=scene.text, 
+                    pressure=-29, 
+                    show_flame=(scene.id == 1),
+                    variant=variant
+                )
             )
             scenes.append(comp)
         else:
-            print(f"  -> Scene {scene.id} 未命中组件，降级为 [text] 组件，并触发后台 Coder")
-            # 降级策略
+            print(f"  -> Scene {scene.id} 降级为 [text] 组件，触发后台进化")
             comp = TextComponent(
                 duration=scene.duration,
                 params=TextComponentParams(text=scene.text)
             )
             scenes.append(comp)
-            
-            # 触发后台异步自我进化 (不阻塞主流程)
             asyncio.create_task(background_coder_reviewer_loop(scene.visual_intent))
             
     return RenderTree(title=script.title, scenes=scenes)
