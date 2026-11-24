@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>为什么天空是蓝色</title>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script> -->
+  <script src="js/gsap.min.js"></script>
+  <style>
+    html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+      background: #0b1020; color: #f0f4ff; font-family: "Noto Sans CJK SC", sans-serif; }
+    #root { position: relative; width: 1920px; height: 1080px; }
+    .scene { position: absolute; inset: 0; padding: 120px 160px; }
+    h1 { font-size: 96px; margin: 0 0 40px; letter-spacing: -0.02em; }
+    p  { font-size: 40px; line-height: 1.6; color: #aab6d6; max-width: 1400px; }
+    .highlight { color: #4fc3f7; font-weight: 700; }
+    .bars { margin-top: 60px; display: flex; flex-direction: column; gap: 36px; max-width: 1400px; }
+    .bar-row { display: flex; align-items: center; gap: 30px; font-size: 36px; }
+    .bar-row span { width: 120px; color: #aab6d6; }
+    .bar { height: 48px; border-radius: 24px;
+      background: linear-gradient(90deg, #4fc3f7, #7c4dff); width: 0; }
+    #particles { position: absolute; inset: 0; }
+    .particle { position: absolute; width: 8px; height: 8px; border-radius: 50%;
+      background: #4fc3f7; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div id="root" data-duration="12">
+    <section id="scene-1" class="scene">
+      <h1>阳光看起来是白色的</h1>
+      <p>但它其实包含了所有颜色的光。</p>
+    </section>
+    <section id="scene-2" class="scene" style="opacity:0;">
+      <h1>蓝光波长更短</h1>
+      <p>更容易被大气分子<span class="highlight">散射</span>到各个方向。</p>
+    </section>
+    <section id="scene-3" class="scene" style="opacity:0;">
+      <h1>不同颜色的散射强度</h1>
+      <div class="bars">
+        <div class="bar-row"><span>红光</span><div class="bar" data-value="30"></div></div>
+        <div class="bar-row"><span>绿光</span><div class="bar" data-value="55"></div></div>
+        <div class="bar-row"><span>蓝光</span><div class="bar" data-value="100"></div></div>
+      </div>
+    </section>
+    <div id="particles"></div>
+  </div>
+
+  <script>
+    const root = document.getElementById('root');
+    const tl = gsap.timeline({ paused: true });
+
+    // Scene 1: 0 - 4s
+    tl.from('#scene-1 h1', { y: 60, opacity: 0, duration: 0.7, ease: 'power3.out' }, 0.2)
+      .from('#scene-1 p',  { y: 40, opacity: 0, duration: 0.6, ease: 'power3.out' }, 0.6)
+      .to('#scene-1', { opacity: 0, duration: 0.4 }, 3.6);
+
+    // Scene 2: 4 - 8s
+    tl.set('#scene-2', { opacity: 1 }, 4.0)
+      .from('#scene-2 h1', { y: 60, opacity: 0, duration: 0.7, ease: 'power3.out' }, 4.2)
+      .from('#scene-2 p',  { y: 40, opacity: 0, duration: 0.6, ease: 'power3.out' }, 4.6)
+      .to('#scene-2', { opacity: 0, duration: 0.4 }, 7.6);
+
+    // Scene 3: 8 - 12s
+    tl.set('#scene-3', { opacity: 1 }, 8.0)
+      .from('#scene-3 h1', { y: 50, opacity: 0, duration: 0.6 }, 8.1)
+      .to('#scene-3 .bar', {
+        width: (i, el) => `${el.dataset.value}%`,
+        duration: 1.0, stagger: 0.15, ease: 'power2.out'
+      }, 8.5);
+
+    // 粒子散射动画（在 Scene 2 期间）
+    const particles = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      particles.appendChild(p);
+      const angle = (i / 40) * Math.PI * 2;
+      const dist = 300 + (i % 7) * 45;   // 用确定值代替 Math.random()
+      gsap.set(p, { x: 960, y: 540 });
+      tl.to(p, {
+        x: 960 + Math.cos(angle) * dist,
+        y: 540 + Math.sin(angle) * dist,
+        opacity: 0, duration: 2.5, ease: 'power2.out'
+      }, 4.8 + (i % 5) * 0.1);
+    }
+
+    // 关键：暴露确定性 seek 接口
+    tl.pause();
+    window.__timelines = window.__timelines || {};
+    window.__timelines.main = tl;
+    window.__seekFrame = (t) => { tl.seek(t, true); };
+  </script>
+</body>
+</html>

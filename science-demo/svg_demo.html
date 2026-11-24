@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SVG 路径动画演示</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<style>
+  svg {
+    width: 1920px;
+    height: 1080px;
+    background: #0b1020;
+  }
+  .map-path {
+    fill: none;
+    stroke: #4fc3f7;
+    stroke-width: 3;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+</style>
+</head>
+<body>
+  <svg viewBox="0 0 1000 600">
+    <!-- 一条模拟地图轮廓路径 -->
+    <path class="map-path" d="M100,300 L250,120 L450,200 L650,80 L800,300 L600,450 L300,420 Z"/>
+  </svg>
+
+<script>
+const tl = gsap.timeline({paused: true});
+tl.to(".map-path", {
+  strokeDashoffset: 0,
+  duration: 3,
+  ease: "power2.inOut"
+});
+tl.to(".path-1", {strokeDashoffset:0, duration:2})
+  .to(".path-2", {strokeDashoffset:0, duration:2})
+  .to(".path-3", {strokeDashoffset:0, duration:2});
+
+// 开始动画
+tl.play();
+</script>
+</body>
+</html>

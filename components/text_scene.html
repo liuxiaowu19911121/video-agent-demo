@@ -1,0 +1,10 @@
+<div class="scene" id="scene-{{ index }}">
+  <h1 style="color: white; font-size: 80px;">{{ params.text }}</h1>
+</div>
+<script>
+  window.sceneAnims.push((tl, offset) => {
+    tl.set('#scene-{{ index }}', { opacity: 1 }, offset);
+    tl.from('#scene-{{ index }} h1', { y: 50, opacity: 0, duration: 0.8 }, offset + 0.2);
+    tl.to('#scene-{{ index }}', { opacity: 0, duration: 0.5 }, offset + {{ duration }} - 0.5);
+  });
+</script>

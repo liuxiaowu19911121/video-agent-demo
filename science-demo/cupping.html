@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>拔火罐原理科普</title>
+  <script src="js/gsap.min.js"></script>
+  <style>
+    html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+      background: #a88c7d; font-family: "Noto Sans CJK SC", sans-serif; }
+    
+    /* 背景：模拟肌肉组织的暖色渐变 */
+    .bg { position: absolute; inset: 0; background: radial-gradient(circle at 50% 60%, #c9a496, #8b6757); }
+
+    /* 顶部导航条 */
+    .nav { position: absolute; top: 100px; left: 120px; right: 120px; display: flex; gap: 40px; }
+    .nav-item { flex: 1; color: rgba(255,255,255,0.4); font-size: 32px; padding-bottom: 12px; border-bottom: 4px solid rgba(255,255,255,0.2); transition: all 0.3s; }
+    .nav-item.active { color: #fff; font-weight: bold; border-bottom: 4px solid #ff8c00; }
+
+    /* 核心场景容器 */
+    .scene-container { position: absolute; top: 250px; left: 50%; transform: translateX(-50%); width: 1000px; height: 800px; }
+
+    /* 皮肤层 (SVG形变) */
+    .skin-layer { position: absolute; bottom: 0; width: 100%; height: 400px; z-index: 10; }
+    /* 血管层 */
+    .vessel-layer { position: absolute; bottom: 20px; width: 100%; height: 300px; z-index: 5; opacity: 0.8; }
+
+    /* 火罐玻璃罩 */
+    .glass-cup { 
+      position: absolute; top: 50px; left: 50%; transform: translateX(-50%); 
+      width: 500px; height: 450px; 
+      border-radius: 250px 250px 30px 30px; 
+      border: 12px solid rgba(255, 255, 255, 0.4); 
+      border-bottom: none;
+      box-shadow: inset 20px 20px 40px rgba(255,255,255,0.2), 
+                  inset -20px 0px 40px rgba(0,0,0,0.1),
+                  0 20px 50px rgba(0,0,0,0.2);
+      z-index: 20;
+    }
+
+    /* 火焰 */
+    .flame { 
+      position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%);
+      width: 80px; height: 120px; 
+      background: radial-gradient(ellipse at bottom, #fff 0%, #ffd700 40%, #ff8c00 80%, transparent 100%);
+      border-radius: 50% 50% 20% 20%; 
+      filter: blur(5px); 
+      box-shadow: 0 0 60px 20px rgba(255, 165, 0, 0.6);
+      z-index: 15;
+    }
+
+    /* 气压数值 */
+    .pressure-ui { position: absolute; top: 200px; right: 150px; text-align: right; color: #fff; }
+    .pressure-num { font-size: 160px; font-weight: bold; line-height: 1; }
+    .pressure-unit { font-size: 40px; color: #ff8c00; }
+    
+    /* 字幕 */
+    .subtitle { 
+      position: absolute; bottom: 150px; width: 100%; text-align: center; 
+      font-size: 64px; color: #fff; font-weight: bold; 
+      text-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 30;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+
+  <div class="nav">
+    <div class="nav-item active">罐内负压</div>
+    <div class="nav-item">血管受压</div>
+    <div class="nav-item">印子深浅</div>
+    <div class="nav-item">水珠来源</div>
+  </div>
+
+  <div class="pressure-ui">
+    <div><span class="pressure-num" id="pressure-val">0</span><span class="pressure-unit">千帕</span></div>
+    <div style="font-size: 32px; color: rgba(255,255,255,0.6);">罐内气压 (示意)</div>
+  </div>
+
+  <div class="scene-container">
+    <!-- 血管层 -->
+    <svg class="vessel-layer" viewBox="0 0 1000 300" preserveAspectRatio="none">
+      <!-- 红色血管 -->
+      <path id="vessel-red" d="M0,200 Q100,150 200,200 T400,200 T600,200 T800,200 T1000,200" stroke="#d32f2f" stroke-width="24" fill="none" stroke-linecap="round"/>
+      <path id="vessel-blue" d="M0,230 Q100,180 200,230 T400,230 T600,230 T800,230 T1000,230" stroke="#1976d2" stroke-width="16" fill="none" stroke-linecap="round"/>
+    </svg>
+
+    <!-- 皮肤层 (通过 SVG Path 控制形变) -->
+    <svg class="skin-layer" viewBox="0 0 1000 400" preserveAspectRatio="none">
+      <!-- 初始是平缓的曲线，动画中会修改 d 属性让它鼓包 -->
+      <path id="skin-path" d="M0,300 Q500,300 1000,300 L1000,400 L0,400 Z" fill="#e8b4a2" />
+      <!-- 模拟皮下脂肪的黄色层 -->
+      <path id="fat-path" d="M0,320 Q500,320 1000,320 L1000,400 L0,400 Z" fill="#d4af37" opacity="0.6" />
+    </svg>
+
+    <!-- 玻璃罐 -->
+    <div class="glass-cup"></div>
+
+    <!-- 火焰 -->
+    <div class="flame" id="flame"></div>
+  </div>
+
+  <div class="subtitle" id="subtitle">火一烧，罐里的气变少。</div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    // 1. 火焰闪烁动画
+    tl.to("#flame", { scaleY: 1.1, scaleX: 0.9, duration: 0.2, repeat: 5, yoyo: true }, 0);
+
+    // 2. 气压数字滚动 (从 0 变到 -29)
+    const pressureObj = { val: 0 };
+    tl.to(pressureObj, {
+      val: -29,
+      duration: 1.5,
+      ease: "power2.out",
+      onUpdate: () => {
+        document.getElementById("pressure-val").innerText = Math.round(pressureObj.val);
+      }
+    }, 0.5);
+
+    // 3. 皮肤被吸起（修改 SVG 的 d 属性实现 Morphing）
+    // 初始 d: M0,300 Q500,300 1000,300 L1000,400 L0,400 Z
+    // 目标 d: M0,300 Q500,150 1000,300 L1000,400 L0,400 Z (中间控制点 y 轴从 300 变到 150)
+    tl.to("#skin-path", {
+      attr: { d: "M0,300 Q500,100 1000,300 L1000,400 L0,400 Z" },
+      duration: 2,
+      ease: "power2.inOut"
+    }, 1);
+
+    // 脂肪层跟着变形
+    tl.to("#fat-path", {
+      attr: { d: "M0,320 Q500,120 1000,320 L1000,400 L0,400 Z" },
+      duration: 2,
+      ease: "power2.inOut"
+    }, 1);
+
+    // 血管跟着稍微变形
+    tl.to("#vessel-red", {
+      attr: { d: "M0,200 Q250,150 500,130 T750,150 T1000,200" },
+      duration: 2,
+      ease: "power2.inOut"
+    }, 1);
+
+    // 4. 玻璃罐下压的微动效
+    tl.from(".glass-cup", { y: -50, opacity: 0, duration: 1 }, 0.2);
+    tl.to(".glass-cup", { y: 20, duration: 2, ease: "power2.inOut" }, 1);
+
+    // 5. 字幕淡入
+    tl.from("#subtitle", { y: 30, opacity: 0, duration: 0.8 }, 2);
+
+    tl.pause();
+    window.__timelines = window.__timelines || {};
+    window.__timelines.main = tl;
+    window.__seekFrame = (t) => { tl.seek(t, true); };
+  </script>
+</body>
+</html>

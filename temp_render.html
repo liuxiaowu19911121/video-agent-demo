@@ -1,0 +1,67 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <script src="science-demo/js/gsap.min.js"></script>
+      <style> 
+        body { margin: 0; background: #2c2c2c; overflow: hidden; font-family: sans-serif; } 
+        .scene { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      </style>
+      <script> window.sceneAnims = []; </script>
+    </head>
+    <body>
+      <div class="scene" id="scene-0">
+  <div style="position: absolute; top: 200px; width: 500px; height: 400px; border: 10px solid rgba(255,255,255,0.4); border-radius: 250px 250px 20px 20px; border-bottom: none; z-index: 10;"></div>
+  
+  <div class="flame" style="position: absolute; top: 350px; width: 80px; height: 120px; background: orange; border-radius: 50%; z-index: 5;"></div>
+  
+  <div id="skin-0" style="position: absolute; bottom: 0; width: 100%; height: 200px; background: #e8b4a2; transform-origin: bottom center;"></div>
+  
+  <div style="position: absolute; top: 250px; right: 300px; color: white; font-size: 100px; font-weight: bold;">
+    <!-- 💡 这里直接写死最终的数字，放弃过程滚动 -->
+    <span id="pressure-0">-29</span> 千帕
+  </div>
+  <div style="position: absolute; bottom: 80px; color: white; font-size: 60px;">火一烧，罐里的气变少。</div>
+</div>
+<script>
+  window.sceneAnims.push((tl, offset) => {
+    tl.set('#scene-0', { opacity: 1 }, offset);
+    
+    // 皮肤形变
+    tl.to('#skin-0', { scaleY: 1.5, duration: 2, ease: "power2.out" }, offset + 1);
+    
+    // 火焰缩放
+    tl.to('#scene-0 .flame', { scaleY: 1.2, duration: 0.2, repeat: 3, yoyo: true }, offset);
+    
+    // 场景淡出
+    tl.to('#scene-0', { opacity: 0, duration: 0.5 }, offset + 4.0 - 0.5);
+  });
+</script>
+<div class="scene" id="scene-1">
+  <h1 style="color: white; font-size: 80px;">外部大气压把皮肤压进罐里。</h1>
+</div>
+<script>
+  window.sceneAnims.push((tl, offset) => {
+    tl.set('#scene-1', { opacity: 1 }, offset);
+    tl.from('#scene-1 h1', { y: 50, opacity: 0, duration: 0.8 }, offset + 0.2);
+    tl.to('#scene-1', { opacity: 0, duration: 0.5 }, offset + 5.0 - 0.5);
+  });
+</script>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        const offsets = [0];
+        offsets.push(offsets[offsets.length - 1] + 4.0);
+        offsets.push(offsets[offsets.length - 1] + 5.0);
+        
+        window.sceneAnims.forEach((animFunc, idx) => { animFunc(tl, offsets[idx]); });
+        window.__timelines = { main: tl };
+        // 💡 核心修复：添加 return null; 防止 Playwright 序列化死锁
+        window.__seekFrame = (t) => {
+            tl.seek(t);
+            return null;
+        };
+      </script>
+    </body>
+    </html>
+    

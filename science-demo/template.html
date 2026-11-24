@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>{{ video_title }}</title>
+  <script src="js/gsap.min.js"></script>
+  <style>
+    html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+      background: #0b1020; color: #f0f4ff; font-family: "Noto Sans CJK SC", sans-serif; }
+    #root { position: relative; width: 1920px; height: 1080px; }
+    .scene { position: absolute; inset: 0; padding: 120px 160px; }
+    h1 { font-size: 96px; margin: 0 0 40px; letter-spacing: -0.02em; }
+    p  { font-size: 40px; line-height: 1.6; color: #aab6d6; max-width: 1400px; }
+    .highlight { color: #4fc3f7; font-weight: 700; }
+    .bars { margin-top: 60px; display: flex; flex-direction: column; gap: 36px; max-width: 1400px; }
+    .bar-row { display: flex; align-items: center; gap: 30px; font-size: 36px; }
+    .bar-row span { width: 120px; color: #aab6d6; }
+    .bar { height: 48px; border-radius: 24px;
+      background: linear-gradient(90deg, #4fc3f7, #7c4dff); width: 0; }
+    #particles { position: absolute; inset: 0; }
+    .particle { position: absolute; width: 8px; height: 8px; border-radius: 50%;
+      background: #4fc3f7; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <section id="scene-1" class="scene">
+      <h1>{{ scene_1.title }}</h1>
+      <p>{{ scene_1.text }}</p>
+    </section>
+    
+    <section id="scene-2" class="scene" style="opacity:0;">
+      <h1>{{ scene_2.title }}</h1>
+      <p>{{ scene_2.text }}</p>
+    </section>
+    
+    <section id="scene-3" class="scene" style="opacity:0;">
+      <h1>{{ scene_3.title }}</h1>
+      <p>{{ scene_3.text }}</p>
+      <div class="bars">
+        {% for item in chart_data %}
+        <div class="bar-row">
+          <span>{{ item.label }}</span>
+          <div class="bar" data-value="{{ item.value }}"></div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    <div id="particles"></div>
+  </div>
+
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    // 动态注入的时间轴节点
+    const s1_dur = {{ scene_1.duration }};
+    const s2_dur = {{ scene_2.duration }};
+    const s3_dur = {{ scene_3.duration }};
+
+    // Scene 1 动画
+    tl.from('#scene-1 h1', { y: 60, opacity: 0, duration: 0.7, ease: 'power3.out' }, 0.2)
+      .from('#scene-1 p',  { y: 40, opacity: 0, duration: 0.6, ease: 'power3.out' }, 0.6)
+      .to('#scene-1', { opacity: 0, duration: 0.4 }, s1_dur - 0.4);
+
+    // Scene 2 动画
+    tl.set('#scene-2', { opacity: 1 }, s1_dur)
+      .from('#scene-2 h1', { y: 60, opacity: 0, duration: 0.7, ease: 'power3.out' }, s1_dur + 0.2)
+      .from('#scene-2 p',  { y: 40, opacity: 0, duration: 0.6, ease: 'power3.out' }, s1_dur + 0.6)
+      .to('#scene-2', { opacity: 0, duration: 0.4 }, s1_dur + s2_dur - 0.4);
+
+    // Scene 3 动画
+    tl.set('#scene-3', { opacity: 1 }, s1_dur + s2_dur)
+      .from('#scene-3 h1', { y: 50, opacity: 0, duration: 0.6 }, s1_dur + s2_dur + 0.1)
+      .from('#scene-3 p',  { y: 40, opacity: 0, duration: 0.6 }, s1_dur + s2_dur + 0.3)
+      .to('#scene-3 .bar', {
+        width: (i, el) => `${el.dataset.value}%`,
+        duration: 1.0, stagger: 0.15, ease: 'power2.out'
+      }, s1_dur + s2_dur + 0.5);
+
+    // 粒子散射动画（在 Scene 2 期间）
+    const particles = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      particles.appendChild(p);
+      const angle = (i / 40) * Math.PI * 2;
+      const dist = 300 + (i % 7) * 45;   
+      gsap.set(p, { x: 960, y: 540 });
+      tl.to(p, {
+        x: 960 + Math.cos(angle) * dist,
+        y: 540 + Math.sin(angle) * dist,
+        opacity: 0, duration: 2.5, ease: 'power2.out'
+      }, s1_dur + 0.8 + (i % 5) * 0.1); // 顺着 Scene 2 的起始时间飘散
+    }
+
+    tl.pause();
+    window.__timelines = window.__timelines || {};
+    window.__timelines.main = tl;
+    window.__seekFrame = (t) => { tl.seek(t, true); };
+  </script>
+</body>
+</html>
