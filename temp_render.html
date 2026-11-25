@@ -23,7 +23,7 @@
   <div style="position: absolute; top: 250px; right: 300px; color: white; font-size: 100px; font-weight: bold;">
     <span>-29</span> 千帕
   </div>
-  <div style="position: absolute; bottom: 80px; color: white; font-size: 60px;">火一烧，罐里的气慢慢变少...</div>
+  <div style="position: absolute; bottom: 80px; color: white; font-size: 60px;">拔火罐，这一传统中医疗法，背后隐藏着简单的物理原理。</div>
 </div>
 <script>
   window.sceneAnims.push((tl, offset) => {
@@ -38,12 +38,14 @@
     
     
     // 统一淡出
-    tl.to('#scene-0', { opacity: 0, duration: 0.5 }, offset + 4.0 - 0.5);
+    tl.to('#scene-0', { opacity: 0, duration: 0.5 }, offset + 4.5 - 0.5);
   });
 </script>
 <div class="scene" id="scene-1">
   <div style="position: absolute; top: 200px; width: 500px; height: 400px; border: 10px solid rgba(255,255,255,0.4); border-radius: 250px 250px 20px 20px; border-bottom: none; z-index: 10;"></div>
   
+  
+  <div class="flame" style="position: absolute; top: 350px; width: 80px; height: 120px; background: orange; border-radius: 50%; z-index: 5;"></div>
   
   
   <div id="skin-1" style="position: absolute; bottom: 0; width: 100%; height: 200px; background: #e8b4a2; transform-origin: bottom center;"></div>
@@ -51,7 +53,7 @@
   <div style="position: absolute; top: 250px; right: 300px; color: white; font-size: 100px; font-weight: bold;">
     <span>-29</span> 千帕
   </div>
-  <div style="position: absolute; bottom: 80px; color: white; font-size: 60px;">砰！外部大气压瞬间把皮肤死死压进罐里！</div>
+  <div style="position: absolute; bottom: 80px; color: white; font-size: 60px;">当火罐内的空气被加热后，氧气被消耗，罐内气压迅速降低。</div>
 </div>
 <script>
   window.sceneAnims.push((tl, offset) => {
@@ -69,11 +71,49 @@
     tl.to('#scene-1', { opacity: 0, duration: 0.5 }, offset + 5.0 - 0.5);
   });
 </script>
+<div class="scene" id="scene-2">
+  <div style="position: absolute; top: 200px; width: 500px; height: 400px; border: 10px solid rgba(255,255,255,0.4); border-radius: 250px 250px 20px 20px; border-bottom: none; z-index: 10;"></div>
+  
+  
+  
+  <div id="skin-2" style="position: absolute; bottom: 0; width: 100%; height: 200px; background: #e8b4a2; transform-origin: bottom center;"></div>
+  
+  <div style="position: absolute; top: 250px; right: 300px; color: white; font-size: 100px; font-weight: bold;">
+    <span>-29</span> 千帕
+  </div>
+  <div style="position: absolute; bottom: 80px; color: white; font-size: 60px;">在大气压的作用下，罐体紧紧吸附在皮肤上。</div>
+</div>
+<script>
+  window.sceneAnims.push((tl, offset) => {
+    tl.set('#scene-2', { opacity: 1 }, offset);
+    
+    // 💡 核心：根据 Planner 翻译出的 variant 执行完全不同的动画
+    
+        // 默认普通动画
+        tl.to('#skin-2', { scaleY: 1.5, duration: 2, ease: "power2.out" }, offset + 1);
+    
+    
+    // 统一淡出
+    tl.to('#scene-2', { opacity: 0, duration: 0.5 }, offset + 4.0 - 0.5);
+  });
+</script>
+<div class="scene" id="scene-3">
+  <h1 style="color: white; font-size: 80px;">这种负压吸引能促进局部血液循环，缓解肌肉紧张。</h1>
+</div>
+<script>
+  window.sceneAnims.push((tl, offset) => {
+    tl.set('#scene-3', { opacity: 1 }, offset);
+    tl.from('#scene-3 h1', { y: 50, opacity: 0, duration: 0.8 }, offset + 0.2);
+    tl.to('#scene-3', { opacity: 0, duration: 0.5 }, offset + 4.5 - 0.5);
+  });
+</script>
       <script>
         const tl = gsap.timeline({ paused: true });
         const offsets = [0];
-        offsets.push(offsets[offsets.length - 1] + 4.0);
+        offsets.push(offsets[offsets.length - 1] + 4.5);
         offsets.push(offsets[offsets.length - 1] + 5.0);
+        offsets.push(offsets[offsets.length - 1] + 4.0);
+        offsets.push(offsets[offsets.length - 1] + 4.5);
         
         window.sceneAnims.forEach((animFunc, idx) => { animFunc(tl, offsets[idx]); });
         window.__timelines = { main: tl };
